@@ -908,20 +908,10 @@
     }
 
     function drawMomonga(x, y, faceDir = 0, walk = 0) {
-      const OL = '#0f1626';
       const lLY = Math.round(walk * 3);
       const rLY = Math.round(-walk * 3);
       const lAY = Math.round(-walk * 2);
       const rAY = Math.round(walk * 2);
-      drawPixelRect(x + 8, y + 9, 12, 30, OL);
-      drawPixelRect(x - 13, y + 10, 26, 27, OL);
-      drawPixelRect(x - 12, y + 7, 24, 19, OL);
-      drawPixelRect(x - 17, y + 16 + lAY, 9, 18, OL);
-      drawPixelRect(x + 8, y + 16 + rAY, 9, 18, OL);
-      drawPixelRect(x - 12, y + 1, 8, 14, OL);
-      drawPixelRect(x + 3, y + 1, 8, 14, OL);
-      drawPixelRect(x - 8, y + 32 + lLY, 7, 10, OL);
-      drawPixelRect(x + 1, y + 32 + rLY, 7, 10, OL);
       drawPixelRect(x + 9, y + 10, 10, 28, '#b8e6f1');
       drawPixelRect(x + 15, y + 14, 8, 20, '#95d1e8');
       drawPixelRect(x + 19, y + 20, 5, 12, '#7fc4df');
@@ -931,12 +921,10 @@
       drawPixelRect(x + 11, y + 13, 2, 20, '#d8cfc4');
       drawPixelRect(x - 16, y + 17 + lAY, 7, 16, '#fff9ef');
       drawPixelRect(x + 9, y + 17 + rAY, 7, 16, '#fff9ef');
-      drawPixelRect(x - 10, y + 3, 6, 12, '#fff9ef');
-      drawPixelRect(x + 4, y + 3, 6, 12, '#fff9ef');
-      drawPixelRect(x - 11, y + 2, 2, 12, '#4a2d36');
-      drawPixelRect(x + 9, y + 2, 2, 12, '#4a2d36');
-      drawPixelRect(x - 8, y + 1, 4, 6, '#f6c6d1');
-      drawPixelRect(x + 4, y + 1, 4, 6, '#f6c6d1');
+      drawPixelRect(x - 12, y, 9, 16, '#fff9ef');
+      drawPixelRect(x + 3, y, 9, 16, '#fff9ef');
+      drawPixelRect(x - 9, y + 1, 5, 8, '#f6c6d1');
+      drawPixelRect(x + 6, y + 1, 5, 8, '#f6c6d1');
       drawPixelRect(x - 11, y + 8, 22, 17, '#fff9ef');
       drawPixelRect(x - 7, y + 8, 14, 3, '#ffffff');
       drawPixelRect(x - 7, y + 33 + lLY, 5, 8, '#fff9ef');
@@ -948,18 +936,10 @@
     }
 
     function drawFuruhon(x, y, faceDir = 0, walk = 0) {
-      const OL = '#0f1626';
       const lLY = Math.round(walk * 3);
       const rLY = Math.round(-walk * 3);
       const lAY = Math.round(-walk * 2);
       const rAY = Math.round(walk * 2);
-      drawPixelRect(x - 13, y + 11, 26, 26, OL);
-      drawPixelRect(x - 16, y + 17 + lAY, 8, 16, OL);
-      drawPixelRect(x + 8, y + 17 + rAY, 8, 16, OL);
-      drawPixelRect(x - 9, y + 33 + lLY, 7, 10, OL);
-      drawPixelRect(x + 2, y + 33 + rLY, 7, 10, OL);
-      drawPixelRect(x - 17, y - 3, 16, 15, OL);
-      drawPixelRect(x + 1, y - 3, 16, 15, OL);
       drawPixelRect(x - 12, y + 12, 24, 24, '#ffd5df');
       drawPixelRect(x - 13, y + 13, 2, 20, '#d99aa9');
       drawPixelRect(x + 11, y + 13, 2, 20, '#d99aa9');
