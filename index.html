@@ -895,8 +895,8 @@
       const isMoving = !kissing && (keys.has('ArrowLeft') || keys.has('ArrowRight') || keys.has('ArrowUp') || keys.has('ArrowDown') || keys.has('a') || keys.has('s') || keys.has('d') || keys.has('w'));
       const walk = isMoving ? Math.sin(state.t * 12) : 0;
 
-      drawMomonga(p.x + (kissing ? 14 : 8), p.y + bob, kissing ? 1 : 0, walk);
-      drawFuruhon(p.x + (kissing ? 30 : 34), p.y - bob, kissing ? -1 : 0, -walk);
+      drawFuruhon(p.x + (kissing ? 16 : 8), p.y + bob, kissing ? 1 : 0, walk);
+      drawMomonga(p.x + (kissing ? 28 : 30), p.y - bob, kissing ? -1 : 0, -walk);
       drawPixelRect(p.x + 28, p.y + 25, 10, 4, '#ffd36e');
       if (kissing) {
         const y = p.y - 18 - Math.sin(state.t * 10) * 3;
