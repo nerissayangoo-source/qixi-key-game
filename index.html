@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>七夕的密钥</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f8e7c9;
+      --muted: #b6c7d8;
+      --panel: #18233d;
+      --edge: #4a6f9e;
+      --pink: #f783b5;
+      --gold: #ffd36e;
+      --sea: #36c2d6;
+      --green: #72d69b;
+      --danger: #ff6969;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #101423;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: 0;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background:
+        linear-gradient(180deg, #12182c 0%, #162343 48%, #0d1323 100%);
+    }
+
+    .shell {
+      width: min(100%, 1120px);
+      height: min(100vh - 36px, 760px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+
+    header,
+    .status,
+    .dialog,
+    .pad {
+      image-rendering: pixelated;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      border: 4px solid var(--edge);
+      background: #17213a;
+      box-shadow: 0 8px 0 #070b14;
+      padding: 8px 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(18px, 3vw, 28px);
+      line-height: 1;
+      color: var(--gold);
+      text-shadow: 3px 3px 0 #772d6b;
+      white-space: nowrap;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .tag {
+      min-width: 96px;
+      border: 3px solid #344d77;
+      background: #0f1628;
+      padding: 5px 8px;
+      text-align: center;
+      box-shadow: inset 0 -3px 0 #070b14;
+    }
+
+    .stage-wrap {
+      position: relative;
+      min-height: 0;
+      border: 6px solid #4a6f9e;
+      background: #060912;
+      box-shadow: 0 10px 0 #070b14;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #0b1020;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(5, 8, 17, .78);
+    }
+
+    .overlay[hidden] { display: none; }
+
+    .dialog {
+      width: min(720px, 100%);
+      border: 5px solid #f1c46c;
+      background: #17213a;
+      box-shadow: 0 8px 0 #070b14, inset 0 0 0 4px #2c416c;
+      padding: 18px;
+    }
+
+    .dialog h2 {
+      margin: 0 0 12px;
+      color: #ff9ec7;
+      font-size: clamp(20px, 4vw, 34px);
+      line-height: 1.1;
+      text-shadow: 3px 3px 0 #682a63;
+    }
+
+    .dialog p {
+      margin: 0 0 14px;
+      color: #f8e7c9;
+      font-size: clamp(14px, 2.4vw, 18px);
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: 4px solid #f1c46c;
+      background: #273c66;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      padding: 10px 14px;
+      min-height: 46px;
+      box-shadow: 0 5px 0 #070b14, inset 0 -4px 0 #15243e;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      outline: 0;
+      background: #31518b;
+      color: #fff6df;
+    }
+
+    .key {
+      display: inline-block;
+      margin-top: 2px;
+      padding: 8px 10px;
+      border: 3px solid #72d69b;
+      background: #0b1e23;
+      color: #9dffbd;
+      word-break: break-all;
+    }
+
+    .pad {
+      display: none;
+      grid-template-columns: 64px 64px 64px auto 82px;
+      grid-template-rows: 58px 58px;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .pad button {
+      min-width: 0;
+      width: 64px;
+      height: 58px;
+      padding: 0;
+      font-size: 22px;
+      touch-action: none;
+    }
+
+    .pad .up { grid-column: 2; grid-row: 1; }
+    .pad .left { grid-column: 1; grid-row: 2; }
+    .pad .down { grid-column: 2; grid-row: 2; }
+    .pad .right { grid-column: 3; grid-row: 2; }
+    .pad .start { grid-column: 5; grid-row: 1 / span 2; width: 82px; height: 100%; font-size: 15px; }
+
+    @media (max-width: 760px), (pointer: coarse) {
+      body { padding: 10px; overflow: auto; }
+      .shell { height: calc(100vh - 20px); grid-template-rows: auto minmax(300px, 1fr) auto; }
+      header { align-items: flex-start; flex-direction: column; min-height: auto; }
+      .status { justify-content: flex-start; }
+      .tag { min-width: 84px; font-size: 12px; }
+      .pad { display: grid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" aria-label="七夕的密钥小游戏">
+    <header>
+      <h1>七夕的密钥</h1>
+      <div class="status" aria-live="polite">
+        <div class="tag" id="levelTag">第一关</div>
+        <div class="tag" id="memoryTag">碎片 0/3</div>
+        <div class="tag" id="heartTag">心跳 3</div>
+      </div>
+    </header>
+
+    <section class="stage-wrap">
+      <canvas id="game" width="960" height="540"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="dialog">
+          <h2 id="dialogTitle">云端来信</h2>
+          <p id="dialogText">七夕夜，我和姐姐收到一封从鹊桥寄来的像素信。信纸被雪山、云海和海浪切成三段，我们需要依次从雪山，星桥以及潮汐里找出线索。</p>
+          <div class="actions">
+            <button id="primaryBtn" type="button">启程</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="pad" aria-label="移动控制">
+      <button class="up" data-key="ArrowUp" type="button" aria-label="上">▲</button>
+      <button class="left" data-key="ArrowLeft" type="button" aria-label="左">◀</button>
+      <button class="down" data-key="ArrowDown" type="button" aria-label="下">▼</button>
+      <button class="right" data-key="ArrowRight" type="button" aria-label="右">▶</button>
+      <button class="start" id="padAction" type="button">继续</button>
+    </nav>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const dialogTitle = document.getElementById('dialogTitle');
+    const dialogText = document.getElementById('dialogText');
+    const primaryBtn = document.getElementById('primaryBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const padAction = document.getElementById('padAction');
+    const levelTag = document.getElementById('levelTag');
+    const memoryTag = document.getElementById('memoryTag');
+    const heartTag = document.getElementById('heartTag');
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const keys = new Set();
+    const TILE = 24;
+    const SECRET = 'withyou4ever';
+    const MAX_PARTICLES = 120;
+    const STAR_POS = Array.from({length: 58}, (_, i) => [(i * 137 + 31) % W, 22 + ((i * 71) % 190)]);
+    const levelGradients = new Array(levels.length).fill(null);
+
+    const levels = [
+      {
+        name: '第一关',
+        place: '雪山',
+        fragment: '心光',
+        skyA: '#14233f', skyB: '#6c93c7', ground: '#d8f3ff', path: '#9fc9e8', accent: '#ffffff',
+        storyTitle: '第一关：雪山的白色回声',
+        story: '信封第一角落在雪山。姐姐说先找会发光的心，每收回一颗心，纸上的坐标就会亮一点。',
+        nextTitle: '雪线之后',
+        next: '三颗心合在一起，指向云海的入口坐标。乘着雪风进入云海，信纸背面浮出第二段：沿着最亮的星走。',
+        items: [[168, 330], [448, 234], [720, 378]],
+        gate: { x: 858, y: 92, w: 58, h: 96 },
+        blocks: [[250, 250, 140, 38], [500, 330, 160, 38], [612, 150, 48, 154], [84, 96, 120, 36]],
+        hazards: [[344, 388, 84, 26, 1], [720, 210, 86, 26, -1]],
+        start: { x: 70, y: 408 }
+      },
+      {
+        name: '第二关',
+        place: '云海',
+        fragment: '星光',
+        skyA: '#14203b', skyB: '#f59fbd', ground: '#fff1d8', path: '#ffd890', accent: '#fff7f0',
+        storyTitle: '第二关：云海上的星桥',
+        story: '带着雪山坐标，我们踏上云海星桥。星光碎片会把桥面点亮，也会指向被潮汐藏起来的蓝色信封。',
+        nextTitle: '星桥尽头',
+        next: '星桥合拢成一张小小星图，尽头正对海上的灯塔。我们把星图收进信封，潜进深深的海底。',
+        items: [[216, 140], [500, 398], [742, 170]],
+        gate: { x: 840, y: 374, w: 66, h: 88 },
+        blocks: [[128, 248, 150, 34], [370, 122, 156, 34], [580, 292, 142, 34], [420, 438, 130, 30], [238, 386, 82, 28]],
+        hazards: [[310, 336, 92, 24, -1, 42, 2.05], [664, 102, 90, 24, 1, 44, 2.2], [766, 284, 66, 24, -1, 40, 2.35], [470, 218, 74, 22, 1, 34, 2.6]],
+        start: { x: 74, y: 74 }
+      },
+      {
+        name: '第三关',
+        place: '海洋',
+        fragment: '贝壳',
+        skyA: '#102844', skyB: '#1aa6bc', ground: '#245b89', path: '#7edbd9', accent: '#b7fff6',
+        storyTitle: '第三关：潮汐里的蓝色信封',
+        story: '潜入海底，蓝色信封被海浪推远。我们要找齐三枚贝壳，让灯塔读出雪山和云海留下的坐标。',
+        nextTitle: '密钥开启',
+        next: '心、星光和贝壳连成一条发亮的线。灯塔照透信封，七夕的密钥终于出现。',
+        items: [[188, 392], [506, 154], [744, 326]],
+        gate: { x: 842, y: 86, w: 70, h: 100 },
+        blocks: [[126, 208, 146, 34], [354, 300, 132, 34], [590, 206, 138, 34], [710, 420, 128, 34], [438, 104, 106, 30], [246, 430, 86, 28]],
+        hazards: [[288, 128, 96, 26, 1, 50, 2.35], [544, 384, 92, 26, -1, 56, 2.55], [742, 248, 88, 26, 1, 54, 2.75], [392, 226, 84, 24, -1, 46, 3], [662, 114, 72, 22, 1, 42, 3.15]],
+        start: { x: 76, y: 420 }
+      }
+    ];
+
+    const state = {
+      mode: 'intro',
+      level: 0,
+      collected: new Set(),
+      hearts: 3,
+      t: 0,
+      kissTimer: 0,
+      player: { x: 70, y: 408, w: 54, h: 44, speed: 190, inv: 0 },
+      particles: []
+    };
+
+    function setDialog(title, text, buttonText) {
+      dialogTitle.textContent = title;
+      dialogText.innerHTML = text;
+      primaryBtn.textContent = buttonText;
+      padAction.textContent = buttonText;
+      overlay.hidden = false;
+    }
+
+    function hideDialog() {
+      overlay.hidden = true;
+    }
+
+    function currentLevel() {
+      return levels[state.level];
+    }
+
+    function resetLevel() {
+      const level = currentLevel();
+      state.collected = new Set();
+      state.hearts = 3;
+      state.player.x = level.start.x;
+      state.player.y = level.start.y;
+      state.player.inv = 0;
+      state.kissTimer = 0;
+      updateHud();
+    }
+
+    function startLevel(index) {
+      state.level = index;
+      state.mode = 'play';
+      resetLevel();
+      hideDialog();
+    }
+
+    function showLevelStory(index) {
+      state.level = index;
+      state.mode = 'story';
+      const level = currentLevel();
+      updateHud();
+      setDialog(level.storyTitle, level.story, '进入' + level.place);
+    }
+
+    function finishLevel() {
+      const level = currentLevel();
+      state.mode = 'between';
+      if (state.level === levels.length - 1) {
+        setDialog(level.nextTitle, level.next + '<br><span class="key">' + SECRET + '</span>', '再玩一次');
+      } else {
+        setDialog(level.nextTitle, level.next, '下一关');
+      }
+    }
+
+    function restartGame() {
+      state.level = 0;
+      state.mode = 'intro';
+      resetLevel();
+      setDialog('云端来信', '七夕夜，我和姐姐收到一封从鹊桥寄来的像素信。信纸被雪山、云海和海浪切成三段，我们需要依次从雪山，星桥以及潮汐里找出线索。<br><small style="color:var(--muted);font-size:.85em">方向键 / WASD 移动</small>', '启程');
+    }
+
+    function updateHud() {
+      const level = currentLevel();
+      levelTag.textContent = level.name;
+      memoryTag.textContent = level.fragment + ' ' + state.collected.size + '/3';
+      heartTag.textContent = '心跳 ' + state.hearts;
+    }
+
+    function rects(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function movePlayer(dt) {
+      const p = state.player;
+      let dx = 0;
+      let dy = 0;
+      if (keys.has('ArrowLeft') || keys.has('a')) dx -= 1;
+      if (keys.has('ArrowRight') || keys.has('d')) dx += 1;
+      if (keys.has('ArrowUp') || keys.has('w')) dy -= 1;
+      if (keys.has('ArrowDown') || keys.has('s')) dy += 1;
+      if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+      const stepX = dx * p.speed * dt;
+      const stepY = dy * p.speed * dt;
+      tryMove(stepX, 0);
+      tryMove(0, stepY);
+      p.x = Math.max(8, Math.min(W - p.w - 8, p.x));
+      p.y = Math.max(62, Math.min(H - p.h - 12, p.y));
+    }
+
+    function tryMove(dx, dy) {
+      const p = state.player;
+      const level = currentLevel();
+      p.x += dx;
+      p.y += dy;
+      for (const b of level.blocks) {
+        if (p.x < b[0] + b[2] && p.x + p.w > b[0] && p.y < b[1] + b[3] && p.y + p.h > b[1]) {
+          p.x -= dx;
+          p.y -= dy;
+          return;
+        }
+      }
+    }
+
+    function collectAndCollide(dt) {
+      const level = currentLevel();
+      const p = state.player;
+      if (p.inv > 0) p.inv -= dt;
+
+      level.items.forEach((item, i) => {
+        if (state.collected.has(i)) return;
+        const hit = { x: item[0] - 12, y: item[1] - 12, w: 24, h: 24 };
+        if (rects(p, hit)) {
+          state.collected.add(i);
+          burst(item[0], item[1], level.accent);
+          triggerKiss();
+          updateHud();
+        }
+      });
+
+      for (const h of level.hazards) {
+        const drift = Math.sin(state.t * (h[6] || 1.8) + h[0]) * (h[5] || 34) * h[4];
+        const hazard = { x: h[0] + drift, y: h[1], w: h[2], h: h[3] };
+        if (p.inv <= 0 && rects(p, hazard)) {
+          state.hearts -= 1;
+          p.inv = 1.25;
+          burst(p.x + p.w / 2, p.y + p.h / 2, '#ff6969');
+          if (state.hearts <= 0) resetLevel();
+          updateHud();
+          break;
+        }
+      }
+
+      if (state.collected.size === 3 && rects(p, level.gate)) finishLevel();
+    }
+
+    function burst(x, y, color) {
+      for (let i = 0; i < 18 && state.particles.length < MAX_PARTICLES; i++) {
+        state.particles.push({
+          x, y,
+          vx: (Math.random() - .5) * 140,
+          vy: (Math.random() - .7) * 130,
+          life: .6 + Math.random() * .4,
+          color,
+          shape: 'spark'
+        });
+      }
+    }
+
+    function triggerKiss() {
+      const p = state.player;
+      state.kissTimer = .95;
+      const colors = ['#ff5f9f', '#ff9ec7', '#ffc2d6'];
+      for (let i = 0; i < 20 && state.particles.length < MAX_PARTICLES; i++) {
+        state.particles.push({
+          x: p.x + 27 + (Math.random() - .5) * 16,
+          y: p.y - 8 + Math.random() * 12,
+          vx: (Math.random() - .5) * 38,
+          vy: -46 - Math.random() * 58,
+          life: .68 + Math.random() * .42,
+          color: colors[i % colors.length],
+          shape: 'kissHeart',
+          size: Math.random() < .18 ? 2 : 1,
+          gravity: 28
+        });
+      }
+    }
+
+    function updateParticles(dt) {
+      if (state.kissTimer > 0) state.kissTimer = Math.max(0, state.kissTimer - dt);
+      state.particles = state.particles.filter(p => {
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += (p.gravity || 90) * dt;
+        return p.life > 0;
+      });
+    }
+
+    function drawPixelRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    }
+
+    function drawBackground(level) {
+      if (!levelGradients[state.level]) {
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, level.skyA);
+        grad.addColorStop(1, level.skyB);
+        levelGradients[state.level] = grad;
+      }
+      ctx.fillStyle = levelGradients[state.level];
+      ctx.fillRect(0, 0, W, H);
+
+      drawStars(level);
+      drawAtmosphere(level);
+      if (level.place === '雪山') drawMountains(level);
+      if (level.place === '云海') drawCloudSea(level);
+      if (level.place === '海洋') drawOcean(level);
+
+      drawPixelRect(0, H - 64, W, 64, level.ground);
+      for (let x = 0; x < W; x += TILE) {
+        drawPixelRect(x, H - 64 + ((x / TILE) % 2) * 8, TILE, 8, level.path);
+      }
+      drawGroundDetails(level);
+    }
+
+    function drawAtmosphere(level) {
+      if (level.place === '雪山') {
+        for (let i = 0; i < 52; i++) {
+          const x = (i * 73 + state.t * 18 + Math.sin(state.t + i) * 16) % W;
+          const y = (i * 43 + state.t * 42) % H;
+          drawPixelRect(x, y, i % 5 === 0 ? 4 : 2, i % 5 === 0 ? 4 : 2, i % 3 ? '#f8fdff' : '#bce5f6');
+        }
+      } else if (level.place === '云海') {
+        for (let i = 0; i < 36; i++) {
+          const x = (i * 97 + Math.sin(state.t * 1.7 + i) * 22) % W;
+          const y = 82 + ((i * 47 + state.t * 26) % 220);
+          drawPixelRect(x, y, 5, 5, i % 2 ? '#fff7bc' : '#ff9ec7');
+          if (i % 4 === 0) drawPixelRect(x - 5, y + 2, 15, 2, '#fff8e9');
+        }
+      } else {
+        for (let i = 0; i < 44; i++) {
+          const x = (i * 61 + Math.sin(state.t * 1.4 + i) * 18) % W;
+          const y = 290 + ((i * 37 - state.t * 30) % 220);
+          drawPixelRect(x, y, 4, 4, i % 2 ? '#a6fff4' : '#fff7bc');
+          if (i % 6 === 0) drawPixelRect(x + 7, y + 3, 3, 3, '#48d4d5');
+        }
+      }
+    }
+
+    function drawGroundDetails(level) {
+      for (let i = 0; i < 42; i++) {
+        const x = (i * 83 + 19) % W;
+        const y = H - 58 + ((i * 29) % 44);
+        if (level.place === '雪山') {
+          drawPixelRect(x, y, 8, 3, i % 2 ? '#f8fdff' : '#bce5f6');
+          if (i % 6 === 0) drawPixelRect(x + 10, y - 16, 4, 18, '#6986a8');
+        } else if (level.place === '云海') {
+          drawPixelRect(x, y, 10, 4, i % 2 ? '#fff8e9' : '#ffc4cf');
+          if (i % 7 === 0) drawPixelRect(x + 7, y - 18, 5, 18, '#ffd36e');
+        } else {
+          drawPixelRect(x, y, 16, 4, i % 2 ? '#a6fff4' : '#48d4d5');
+          if (i % 5 === 0) drawPixelRect(x + 8, y - 10, 6, 5, '#ffd36e');
+        }
+      }
+    }
+
+    function drawStars(level) {
+      ctx.fillStyle = '#fff7bc';
+      for (let i = 0; i < STAR_POS.length; i++) {
+        const twinkle = ((Math.floor(state.t * 4 + i) % 3) === 0) ? 4 : 2;
+        ctx.fillRect(STAR_POS[i][0], STAR_POS[i][1], twinkle, twinkle);
+      }
+      ctx.fillStyle = level.accent;
+      ctx.fillRect(780, 44, 42, 8);
+      ctx.fillRect(797, 27, 8, 42);
+      ctx.globalAlpha = .24;
+      ctx.fillStyle = '#ff9ec7';
+      ctx.fillRect(118, 58, 96, 8);
+      ctx.fillRect(146, 42, 42, 8);
+      ctx.fillStyle = '#72d69b';
+      ctx.fillRect(628, 80, 120, 6);
+      ctx.fillRect(660, 64, 48, 6);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMountains(level) {
+      for (let i = 0; i < 5; i++) {
+        const base = 310 + i * 18;
+        const x = i * 210 - 70;
+        ctx.fillStyle = i % 2 ? '#476996' : '#385982';
+        ctx.beginPath();
+        ctx.moveTo(x, base);
+        ctx.lineTo(x + 150, 86 + i * 12);
+        ctx.lineTo(x + 330, base);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#f8fdff';
+        ctx.beginPath();
+        ctx.moveTo(x + 150, 86 + i * 12);
+        ctx.lineTo(x + 106, 172 + i * 12);
+        ctx.lineTo(x + 184, 172 + i * 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#bce5f6';
+        ctx.fillRect(x + 128, 180 + i * 12, 44, 6);
+        ctx.fillRect(x + 198, 232 + i * 8, 56, 6);
+      }
+      for (let x = 36; x < W; x += 118) {
+        drawPixelRect(x, 392 + (x % 3) * 10, 8, 42, '#385982');
+        drawPixelRect(x - 16, 376 + (x % 3) * 10, 40, 12, '#8fc1dc');
+        drawPixelRect(x - 11, 364 + (x % 3) * 10, 30, 12, '#d8f3ff');
+      }
+    }
+
+    function drawCloudSea(level) {
+      for (let row = 0; row < 3; row++) {
+        for (let x = -80; x < W + 120; x += 118) {
+          const y = 250 + row * 70 + Math.sin(state.t + x * .01) * 10;
+          ctx.fillStyle = row % 2 ? '#ffe4e7' : '#fff8e9';
+          ctx.fillRect(x, y, 82, 26);
+          ctx.fillRect(x + 22, y - 18, 72, 34);
+          ctx.fillRect(x + 64, y + 2, 86, 28);
+          ctx.fillStyle = row % 2 ? '#ffc4cf' : '#ffd890';
+          ctx.fillRect(x + 28, y + 22, 32, 4);
+          ctx.fillRect(x + 84, y + 18, 42, 4);
+        }
+      }
+      for (let x = 80; x < W; x += 150) {
+        const y = 130 + Math.sin(state.t * 1.3 + x) * 8;
+        drawPixelRect(x, y, 10, 10, '#fff7bc');
+        drawPixelRect(x + 4, y - 8, 3, 26, '#fff7bc');
+        drawPixelRect(x - 8, y + 4, 26, 3, '#fff7bc');
+      }
+    }
+
+    function drawOcean(level) {
+      ctx.fillStyle = '#0c4775';
+      ctx.fillRect(0, 270, W, H - 270);
+      for (let y = 292; y < H; y += 38) {
+        for (let x = -40; x < W; x += 96) {
+          const wave = Math.sin(state.t * 2 + x * .02 + y) * 12;
+          ctx.fillStyle = y % 76 ? '#48d4d5' : '#a6fff4';
+          ctx.fillRect(x + wave, y, 54, 6);
+          ctx.fillStyle = '#fff7bc';
+          if ((x + y) % 4 === 0) ctx.fillRect(x + wave + 18, y + 14, 8, 3);
+        }
+      }
+      ctx.fillStyle = '#ffd36e';
+      ctx.fillRect(70, 96, 38, 114);
+      ctx.fillStyle = '#fff1d8';
+      ctx.fillRect(58, 80, 62, 22);
+      ctx.fillStyle = '#ff6969';
+      ctx.fillRect(70, 58, 38, 22);
+      ctx.fillStyle = '#fff7bc';
+      ctx.fillRect(104, 86, 86, 10);
+      for (let i = 0; i < 8; i++) {
+        const x = 178 + i * 86 + Math.sin(state.t * 1.5 + i) * 10;
+        const y = 318 + (i % 3) * 44;
+        drawPixelRect(x, y, 14, 6, i % 2 ? '#ffd36e' : '#ff9ec7');
+        drawPixelRect(x + 14, y + 2, 5, 3, i % 2 ? '#ffd36e' : '#ff9ec7');
+      }
+    }
+
+    function drawWorld() {
+      const level = currentLevel();
+      drawBackground(level);
+      drawStoryRelic(level);
+      drawStoryTrail(level);
+
+      for (const b of level.blocks) drawBlock(b, level);
+      drawGate(level.gate, state.collected.size === 3, level);
+      drawItems(level);
+      drawHazards(level);
+      drawPlayers();
+      drawParticles();
+      drawForegroundSparkles(level);
+    }
+
+    function drawStoryRelic(level) {
+      const x = 24;
+      const y = 82;
+      const active = state.level;
+      drawPixelRect(x, y, 102, 32, '#17213a');
+      drawPixelRect(x + 3, y + 3, 96, 26, '#f8e7c9');
+      drawPixelRect(x + 6, y + 6, 90, 3, '#c89558');
+      drawPixelRect(x + 12, y + 20, 20, 3, active >= 0 ? '#ff9ec7' : '#8da0b7');
+      drawPixelRect(x + 42, y + 20, 20, 3, active >= 1 ? '#ffd36e' : '#8da0b7');
+      drawPixelRect(x + 72, y + 20, 18, 3, active >= 2 ? '#36c2d6' : '#8da0b7');
+      drawMiniHeart(x + 22, y + 14, active >= 0 ? '#ff5f9f' : '#8da0b7');
+      drawMiniStar(x + 52, y + 14, active >= 1 ? '#ffd36e' : '#8da0b7');
+      drawMiniShell(x + 82, y + 14, active >= 2 ? '#36c2d6' : '#8da0b7');
+    }
+
+    function drawStoryTrail(level) {
+      const points = [[level.start.x + 26, level.start.y + 24], ...level.items, [level.gate.x + level.gate.w / 2, level.gate.y + level.gate.h / 2]];
+      ctx.globalAlpha = .45;
+      const color = level.place === '雪山' ? '#ff9ec7' : level.place === '云海' ? '#fff7bc' : '#a6fff4';
+      for (let i = 0; i < points.length - 1; i++) {
+        drawDottedSegment(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1], color, i);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawDottedSegment(ax, ay, bx, by, color, offset) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const steps = Math.max(8, Math.floor(Math.hypot(dx, dy) / 18));
+      for (let i = 0; i <= steps; i++) {
+        if ((i + offset) % 2) continue;
+        const t = i / steps;
+        const wave = Math.sin(state.t * 3 + i) * 3;
+        drawPixelRect(ax + dx * t, ay + dy * t + wave, 5, 5, color);
+      }
+    }
+
+    function drawForegroundSparkles(level) {
+      ctx.globalAlpha = .55;
+      for (let i = 0; i < 18; i++) {
+        const x = (i * 149 + state.t * 20) % W;
+        const y = 112 + ((i * 83) % 360);
+        const color = level.place === '雪山' ? '#f8fdff' : level.place === '云海' ? '#ffd36e' : '#a6fff4';
+        if (i % 3 === 0) {
+          drawPixelRect(x, y, 12, 2, color);
+          drawPixelRect(x + 5, y - 5, 2, 12, color);
+        } else {
+          drawPixelRect(x, y, 4, 4, color);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawBlock(b, level) {
+      drawPixelRect(b[0], b[1], b[2], b[3], level.path);
+      drawPixelRect(b[0], b[1], b[2], 5, '#fff7bc');
+      drawPixelRect(b[0], b[1] + b[3] - 8, b[2], 8, '#31518b');
+      drawPixelRect(b[0], b[1], 5, b[3], '#f8e7c9');
+      drawPixelRect(b[0] + b[2] - 5, b[1], 5, b[3], '#273c66');
+      for (let x = b[0]; x < b[0] + b[2]; x += 24) {
+        drawPixelRect(x + 4, b[1] + 6, 12, 5, level.accent);
+        drawPixelRect(x + 8, b[1] + b[3] - 17, 6, 5, '#4a6f9e');
+      }
+    }
+
+    function drawGate(g, open, level) {
+      drawPixelRect(g.x, g.y, g.w, g.h, open ? '#9dffbd' : '#344d77');
+      drawPixelRect(g.x + 8, g.y + 10, g.w - 16, g.h - 20, open ? '#12352f' : '#111827');
+      ctx.fillStyle = open ? '#fff7bc' : '#6c93c7';
+      ctx.fillRect(g.x + 18, g.y + 24, 8, 8);
+      ctx.fillRect(g.x + g.w - 26, g.y + 24, 8, 8);
+      ctx.fillRect(g.x + g.w / 2 - 5, g.y + 48, 10, 18);
+      drawPixelRect(g.x + 12, g.y - 12, g.w - 24, 10, open ? '#ffd36e' : '#4a6f9e');
+      drawPixelRect(g.x + g.w / 2 - 3, g.y - 28, 6, 18, open ? '#fff7bc' : '#6c93c7');
+      if (!open) {
+        drawPixelRect(g.x + 18, g.y + g.h - 28, g.w - 36, 8, level.accent);
+      }
+    }
+
+    function drawItems(level) {
+      level.items.forEach((item, i) => {
+        if (state.collected.has(i)) return;
+        const y = item[1] + Math.sin(state.t * 4 + i) * 4;
+        drawItemHalo(item[0], y, level.place === '雪山' ? '#ff9ec7' : level.place === '云海' ? '#fff7bc' : '#a6fff4');
+        if (level.place === '雪山') drawHeart(item[0], y, '#ff9ec7');
+        if (level.place === '云海') drawStar(item[0], y, '#fff7bc');
+        if (level.place === '海洋') drawShell(item[0], y, '#ffd36e');
+      });
+    }
+
+    function drawItemHalo(x, y, color) {
+      ctx.globalAlpha = .38 + Math.sin(state.t * 6) * .12;
+      drawPixelRect(x - 23, y - 2, 46, 4, color);
+      drawPixelRect(x - 2, y - 23, 4, 46, color);
+      drawPixelRect(x - 17, y - 17, 8, 4, color);
+      drawPixelRect(x + 9, y - 17, 8, 4, color);
+      drawPixelRect(x - 17, y + 17, 8, 4, color);
+      drawPixelRect(x + 9, y + 17, 8, 4, color);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMiniHeart(x, y, color) {
+      drawPixelRect(x - 4, y - 2, 3, 3, color);
+      drawPixelRect(x + 1, y - 2, 3, 3, color);
+      drawPixelRect(x - 5, y + 1, 10, 3, color);
+      drawPixelRect(x - 3, y + 4, 6, 3, color);
+      drawPixelRect(x - 1, y + 7, 2, 2, color);
+    }
+
+    function drawMiniStar(x, y, color) {
+      drawPixelRect(x - 1, y - 7, 2, 14, color);
+      drawPixelRect(x - 7, y - 1, 14, 2, color);
+      drawPixelRect(x - 3, y - 3, 6, 6, color);
+    }
+
+    function drawMiniShell(x, y, color) {
+      drawPixelRect(x - 6, y, 12, 7, color);
+      drawPixelRect(x - 3, y - 4, 6, 4, '#fff1d8');
+      drawPixelRect(x - 5, y + 7, 10, 3, '#e9a75d');
+    }
+
+    function drawHeart(x, y, color) {
+      drawPixelRect(x - 10, y - 6, 8, 8, color);
+      drawPixelRect(x + 2, y - 6, 8, 8, color);
+      drawPixelRect(x - 14, y + 2, 28, 8, color);
+      drawPixelRect(x - 8, y + 10, 16, 8, color);
+      drawPixelRect(x - 2, y + 18, 4, 4, color);
+    }
+
+    function drawStar(x, y, color) {
+      drawPixelRect(x - 3, y - 16, 6, 32, color);
+      drawPixelRect(x - 16, y - 3, 32, 6, color);
+      drawPixelRect(x - 9, y - 9, 18, 18, '#ffd36e');
+    }
+
+    function drawShell(x, y, color) {
+      drawPixelRect(x - 14, y, 28, 14, color);
+      drawPixelRect(x - 8, y - 8, 16, 8, '#fff1d8');
+      drawPixelRect(x - 12, y + 14, 24, 6, '#e9a75d');
+      drawPixelRect(x - 2, y - 6, 4, 20, '#e9a75d');
+    }
+
+    function drawHazards(level) {
+      for (const h of level.hazards) {
+        const drift = Math.sin(state.t * (h[6] || 1.8) + h[0]) * (h[5] || 34) * h[4];
+        const x = h[0] + drift;
+        const y = h[1];
+        if (level.place === '雪山') {
+          drawPixelRect(x, y, h[2], h[3], '#a5e8ff');
+          drawPixelRect(x + 8, y + 6, h[2] - 16, 6, '#ffffff');
+          drawPixelRect(x + 16, y + h[3] - 7, h[2] - 32, 4, '#6c93c7');
+        } else if (level.place === '云海') {
+          drawPixelRect(x, y, h[2], h[3], '#7b5bc7');
+          drawPixelRect(x + 8, y - 8, h[2] - 16, 8, '#fff7bc');
+          drawPixelRect(x + 12, y + 6, h[2] - 24, 5, '#ff9ec7');
+          drawPixelRect(x + h[2] / 2 - 3, y - 18, 6, 10, '#fff7bc');
+        } else {
+          drawPixelRect(x, y, h[2], h[3], '#ff6969');
+          drawPixelRect(x + 10, y + 6, h[2] - 20, 6, '#ffd36e');
+          drawPixelRect(x + 4, y - 6, 12, 6, '#fff1d8');
+          drawPixelRect(x + h[2] - 16, y + h[3], 12, 6, '#fff1d8');
+        }
+      }
+    }
+
+    function drawPlayers() {
+      const p = state.player;
+      const blink = p.inv > 0 && Math.floor(state.t * 14) % 2 === 0;
+      if (blink) return;
+      const bob = Math.sin(state.t * 8) * 2;
+      const kissing = state.kissTimer > 0;
+      drawMomonga(p.x + (kissing ? 14 : 8), p.y + bob, kissing ? 1 : 0);
+      drawFuruhon(p.x + (kissing ? 30 : 34), p.y - bob, kissing ? -1 : 0);
+      drawPixelRect(p.x + 28, p.y + 25, 10, 4, '#ffd36e');
+      if (kissing) {
+        const y = p.y - 18 - Math.sin(state.t * 10) * 3;
+        drawKissHeart(p.x + 27, y, '#ff5f9f', 2);
+        drawKissHeart(p.x + 18, y + 8, '#ffc2d6', 1);
+        drawKissHeart(p.x + 38, y + 7, '#ff9ec7', 1);
+        drawPixelRect(p.x + 25, p.y + 13, 7, 3, '#ff5f9f');
+      }
+    }
+
+    function drawMomonga(x, y, faceDir = 0) {
+      drawPixelRect(x + 9, y + 10, 10, 28, '#b8e6f1');
+      drawPixelRect(x + 15, y + 14, 8, 20, '#95d1e8');
+      drawPixelRect(x + 19, y + 20, 5, 12, '#7fc4df');
+      drawPixelRect(x + 10, y + 12, 3, 23, '#e7fbff');
+      drawPixelRect(x - 12, y + 11, 24, 25, '#fff9ef');
+      drawPixelRect(x - 13, y + 12, 2, 21, '#d8cfc4');
+      drawPixelRect(x + 11, y + 13, 2, 20, '#d8cfc4');
+      drawPixelRect(x - 16, y + 17, 7, 16, '#fff9ef');
+      drawPixelRect(x + 9, y + 17, 7, 16, '#fff9ef');
+      drawPixelRect(x - 10, y + 3, 6, 12, '#fff9ef');
+      drawPixelRect(x + 4, y + 3, 6, 12, '#fff9ef');
+      drawPixelRect(x - 11, y + 2, 2, 12, '#4a2d36');
+      drawPixelRect(x + 9, y + 2, 2, 12, '#4a2d36');
+      drawPixelRect(x - 8, y + 1, 4, 6, '#f6c6d1');
+      drawPixelRect(x + 4, y + 1, 4, 6, '#f6c6d1');
+      drawPixelRect(x - 11, y + 8, 22, 17, '#fff9ef');
+      drawPixelRect(x - 7, y + 8, 14, 3, '#ffffff');
+      drawPixelRect(x - 7, y + 33, 5, 8, '#fff9ef');
+      drawPixelRect(x + 2, y + 33, 5, 8, '#fff9ef');
+      drawPixelRect(x - 3, y + 14, 6, 5, '#a7dded');
+      drawPixelRect(x - 9, y + 20, 4, 3, '#ff9ab8');
+      drawPixelRect(x + 5, y + 20, 4, 3, '#ff9ab8');
+      drawCharacterFace(x, y, faceDir, '#17213a', '#ffffff', '#6eb9d8');
+    }
+
+    function drawFuruhon(x, y, faceDir = 0) {
+      drawPixelRect(x - 12, y + 12, 24, 24, '#ffd5df');
+      drawPixelRect(x - 13, y + 13, 2, 20, '#d99aa9');
+      drawPixelRect(x + 11, y + 13, 2, 20, '#d99aa9');
+      drawPixelRect(x - 9, y + 6, 18, 11, '#ffd5df');
+      drawPixelRect(x - 6, y + 7, 12, 3, '#ffe9ef');
+      drawPixelRect(x - 15, y + 18, 6, 14, '#ffd5df');
+      drawPixelRect(x + 9, y + 18, 6, 14, '#ffd5df');
+      drawPixelRect(x - 8, y + 34, 5, 8, '#ffd5df');
+      drawPixelRect(x + 3, y + 34, 5, 8, '#ffd5df');
+      drawPixelRect(x - 12, y + 1, 8, 7, '#ff9ab8');
+      drawPixelRect(x - 16, y - 2, 6, 8, '#ff9ab8');
+      drawPixelRect(x - 8, y - 4, 6, 8, '#ff9ab8');
+      drawPixelRect(x + 4, y + 1, 8, 7, '#ff9ab8');
+      drawPixelRect(x + 10, y - 2, 6, 8, '#ff9ab8');
+      drawPixelRect(x + 2, y - 4, 6, 8, '#ff9ab8');
+      drawPixelRect(x - 15, y - 1, 3, 3, '#ffd5df');
+      drawPixelRect(x + 12, y - 1, 3, 3, '#ffd5df');
+      drawPixelRect(x - 10, y + 20, 4, 3, '#ff7fa8');
+      drawPixelRect(x + 6, y + 20, 4, 3, '#ff7fa8');
+      drawPixelRect(x - 5, y + 29, 10, 6, '#eec0cc');
+      drawCharacterFace(x, y + 1, faceDir, '#17213a', '#ffffff', '#ff7fa8');
+    }
+
+    function drawCharacterFace(x, y, faceDir, eye, shine, mouth) {
+      if (faceDir === 1) {
+        drawPixelRect(x + 4, y + 14, 4, 5, eye);
+        drawPixelRect(x + 6, y + 14, 1, 1, shine);
+        drawPixelRect(x + 8, y + 19, 3, 2, '#ff5f9f');
+      } else if (faceDir === -1) {
+        drawPixelRect(x - 8, y + 14, 4, 5, eye);
+        drawPixelRect(x - 7, y + 14, 1, 1, shine);
+        drawPixelRect(x - 11, y + 19, 3, 2, '#ff5f9f');
+      } else {
+        drawPixelRect(x - 7, y + 14, 4, 5, eye);
+        drawPixelRect(x + 3, y + 14, 4, 5, eye);
+        drawPixelRect(x - 6, y + 14, 1, 1, shine);
+        drawPixelRect(x + 4, y + 14, 1, 1, shine);
+        drawPixelRect(x - 1, y + 20, 2, 2, mouth);
+      }
+    }
+
+    function drawParticles() {
+      for (const p of state.particles) {
+        ctx.globalAlpha = Math.max(0, p.life);
+        if (p.shape === 'kissHeart') drawKissHeart(p.x, p.y, p.color, p.size || 1);
+        else drawPixelRect(p.x, p.y, 5, 5, p.color);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawKissHeart(x, y, color, size = 1) {
+      const s = size;
+      drawPixelRect(x - 3 * s, y - 2 * s, 2 * s, 2 * s, color);
+      drawPixelRect(x + 1 * s, y - 2 * s, 2 * s, 2 * s, color);
+      drawPixelRect(x - 4 * s, y, 8 * s, 2 * s, color);
+      drawPixelRect(x - 2 * s, y + 2 * s, 4 * s, 2 * s, color);
+      drawPixelRect(x - 1 * s, y + 4 * s, 2 * s, 1 * s, color);
+      drawPixelRect(x, y, s, s, '#fff1d8');
+    }
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min(.033, (now - last) / 1000);
+      last = now;
+      state.t += dt;
+      if (state.mode === 'play') {
+        movePlayer(dt);
+        collectAndCollide(dt);
+      }
+      updateParticles(dt);
+      drawWorld();
+      requestAnimationFrame(loop);
+    }
+
+    function advance() {
+      if (state.mode === 'intro') showLevelStory(0);
+      else if (state.mode === 'story') startLevel(state.level);
+      else if (state.mode === 'between' && state.level < levels.length - 1) showLevelStory(state.level + 1);
+      else restartGame();
+    }
+
+    primaryBtn.addEventListener('click', advance);
+    padAction.addEventListener('click', advance);
+    if (restartBtn) restartBtn.addEventListener('click', restartGame);
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'w', 'a', 's', 'd'].includes(key)) event.preventDefault();
+      if (key === ' ' || key === 'Enter') {
+        if (!overlay.hidden) advance();
+      } else {
+        keys.add(key);
+      }
+    });
+
+    window.addEventListener('keyup', (event) => {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      keys.delete(key);
+    });
+
+    document.querySelectorAll('[data-key]').forEach(button => {
+      const key = button.dataset.key;
+      const down = (event) => { event.preventDefault(); keys.add(key); };
+      const up = (event) => { event.preventDefault(); keys.delete(key); };
+      button.addEventListener('pointerdown', down);
+      button.addEventListener('pointerup', up);
+      button.addEventListener('pointercancel', up);
+      button.addEventListener('pointerleave', up);
+    });
+
+    restartGame();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
