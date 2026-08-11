@@ -897,7 +897,6 @@
 
       drawFuruhon(p.x + (kissing ? 16 : 8), p.y + bob, kissing ? 1 : 0, walk);
       drawMomonga(p.x + (kissing ? 28 : 30), p.y - bob, kissing ? -1 : 0, -walk);
-      drawPixelRect(p.x + 28, p.y + 25, 10, 4, '#ffd36e');
       if (kissing) {
         const y = p.y - 18 - Math.sin(state.t * 10) * 3;
         drawKissHeart(p.x + 27, y, '#ff5f9f', 2);
